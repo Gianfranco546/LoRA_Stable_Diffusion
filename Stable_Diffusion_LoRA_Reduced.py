@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 import numpy as np
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, Subset
 from diffusers import StableDiffusionPipeline, DDPMScheduler
 from transformers import CLIPTokenizer
 import pandas as pd
@@ -10,7 +10,6 @@ from tqdm import tqdm
 import json
 from pathlib import Path
 from torchvision import transforms
-import wandb
 import random
 random.seed(42)
 torch.manual_seed(42)
@@ -143,16 +142,16 @@ dataset = ArtCapDataset(
     image_dir="artcap_dataset/images",
     tokenizer=tokenizer
 )
+dataset = Subset(dataset, list(range(10)))
 # Test dataset
-dataloader = DataLoader(dataset, batch_size=2, shuffle=True, num_workers=4)
+dataloader = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=0)
 
 # Optimizer (only LoRA params)
 optimizer = torch.optim.AdamW(lora_layers.parameters(), lr=1e-4)
 noise_scheduler = DDPMScheduler.from_pretrained("runwayml/stable-diffusion-v1-5", subfolder="scheduler")
 
 # Training loop
-wandb.init(project="Stable_Diffusion_LoRA") 
-num_epochs = 10
+num_epochs = 1
 for epoch in range(num_epochs):
     total_loss = 0
     progress = tqdm(dataloader, desc=f"Epoch {epoch+1}")
@@ -177,14 +176,11 @@ for epoch in range(num_epochs):
         # Loss
         loss = torch.nn.functional.mse_loss(noise_pred, noise)
         total_loss += loss.item()
-        wandb.log({"train_loss": loss.item()}) 
         loss.backward()
         optimizer.step()
         
         progress.set_postfix(loss=loss.item())
     train_loss = total_loss / len(dataloader)
-    wandb.log({"epoch": epoch+1, "train_loss_epoch": train_loss})
     print(f"Epoch {epoch+1} | Train Loss: {train_loss:.4f}")
 # Save LoRA weights
-torch.save(lora_layers.state_dict(), "artcap_lora.pth")
-wandb.finish()
+torch.save(lora_layers.state_dict(), "artcap_lora_reduced.pth")

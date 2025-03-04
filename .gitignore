@@ -172,3 +172,6 @@ cython_debug/
 
 # custom folder/file ignore
 artcap_dataset/
+artcap_lora_reduced.pth
+artcap_lora.pth
+wandb/
