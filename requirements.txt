@@ -1,0 +1,9 @@
+torch
+numpy
+diffusers
+transformers
+pandas
+Pillow
+tqdm
+torchvision
+wandb

@@ -6,7 +6,6 @@ from diffusers import StableDiffusionPipeline, DDPMScheduler
 from transformers import CLIPTokenizer
 import pandas as pd
 from PIL import Image
-import os
 from tqdm import tqdm
 import json
 from pathlib import Path
