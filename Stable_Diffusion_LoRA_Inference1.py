@@ -74,28 +74,48 @@ def inject_lora(unet, r=8, dropout=0.1):
 
     return unet, lora_layers
 
-# Initialize pipeline
+def generate_image(prompt, pipeline, num_inference_steps=50):
+    """Modified to accept specific pipeline instance"""
+    with torch.no_grad():
+        image = pipeline(
+            prompt,
+            num_inference_steps=num_inference_steps,
+            generator=torch.Generator(device).manual_seed(42)  # For reproducibility
+        ).images[0]
+    return image
+
+# Initialize pipelines
 device = "cuda"
-pipe = StableDiffusionPipeline.from_pretrained(
+
+# 2. LoRA Model Pipeline
+lora_pipe = StableDiffusionPipeline.from_pretrained(
     "runwayml/stable-diffusion-v1-5",
     torch_dtype=torch.float32
 ).to(device)
-
-# Inject LoRA and get trainable parameters
-pipe.unet, _ = inject_lora(pipe.unet, r=8)
+prompt_list = ["cow with female farmer out in the field", "dog running in the park", "there is a bottle of flowers on the table in the hall"]
+prompt = prompt_list[1]
+original_image = generate_image(prompt, lora_pipe)
+# Inject and load LoRA weights
+lora_pipe.unet, _ = inject_lora(lora_pipe.unet, r=8)
 lora_layers = torch.load("artcap_lora_reduced.pth", map_location = device)
-pipe.unet.load_state_dict(lora_layers, strict=False)
+lora_pipe.unet.load_state_dict(lora_layers, strict=False)
 
-def generate_image(prompt, num_inference_steps=50):
-    with torch.no_grad():
-        image = pipe(
-            prompt,
-            num_inference_steps=num_inference_steps).images[0]
-    return image
+# Generate images
 
-prompt = "cow with female farmer out in the field"
-image = generate_image(prompt)
-plt.imshow(image)
-plt.axis('off')  # Hide axes
+# Generate with both models
+lora_image = generate_image(prompt, lora_pipe)
+
+# Plot comparison
+fig, axes = plt.subplots(1, 2, figsize=(20, 10))
+
+axes[0].imshow(original_image)
+axes[0].set_title("Original Stable Diffusion", fontsize=14)
+axes[0].axis('off')
+
+axes[1].imshow(lora_image)
+axes[1].set_title("LoRA Fine-Tuned Model", fontsize=14)
+axes[1].axis('off')
+
+plt.tight_layout()
 plt.show()
-print("Image generated successfully!")
+print("Comparison generated successfully!")

@@ -142,9 +142,9 @@ dataset = ArtCapDataset(
     image_dir="artcap_dataset/images",
     tokenizer=tokenizer
 )
-dataset = Subset(dataset, list(range(10)))
+dataset = Subset(dataset, list(range(50)))
 # Test dataset
-dataloader = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=0)
+dataloader = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=4)
 
 # Optimizer (only LoRA params)
 optimizer = torch.optim.AdamW(lora_layers.parameters(), lr=1e-4)

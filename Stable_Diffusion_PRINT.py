@@ -26,11 +26,11 @@ pipe = pipe.to(device)
 pipe.enable_attention_slicing()
 
 # Input text prompt
-prompt1 = "dog running in the park in the style of vincent van gogh"
-prompt2 = "man jogging"
+prompt1 = "cow with female farmer out in the field"
+#prompt2 = "man jogging"
 # Generate image
-image1 = pipe(prompt1, num_inference_steps=25).images[0]  # Adjust steps as needed
-image2 = pipe(prompt2, num_inference_steps=50).images[0]  # Adjust steps as needed
+image1 = pipe(prompt1, num_inference_steps=50).images[0]  # Adjust steps as needed
+#image2 = pipe(prompt2, num_inference_steps=50).images[0]  # Adjust steps as needed
 #img = Image.open(image)
 
 # Display the image
